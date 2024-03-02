@@ -8,35 +8,22 @@
 import re
 
 digit_to_word = {
-    '0': 'ноль',
-    '2': 'два',
-    '4': 'четыре',
-    '6': 'шесть',
-    '8': 'восемь',
-    'A': 'десять',
-    'C': 'двенадцать',
-    'E': 'четырнадцать'
+    '0': 'ноль', '2': 'два', '4': 'четыре', '6': 'шесть',
+    '8': 'восемь', 'A': 'десять', 'C': 'двенадцать', 'E': 'четырнадцать'
 }
 
-def proc(match):
-    lexeme = match.group()
-    try:
-        num = int(lexeme, 16)
-    except ValueError:
-        return lexeme + " не является шестнадцатеричным числом"
-
-    if num % 2 == 0 and num <= 0x400 and lexeme[0] in '13579BDF':
-        num_str = ' '.join(digit_to_word.get(digit, digit) for digit in lexeme)
-        return lexeme + ': ' + num_str
+def hex_to_words(hex_num):
+    if int(hex_num, 16) <= 0x400:
+        return ' '.join(digit_to_word.get(d, d) for d in hex_num)
     else:
-        return lexeme + " не удовлетворяет условию задачи"
+        return "не удовлетворяет условию задачи"
+
+
+
+pattern = re.compile(r'\b[13579BDF][0-9A-F]*[02468ACE]\b', re.IGNORECASE)
 
 with open('input.txt', 'r') as f:
-    content = f.read()
-
-if not content:
-    print("\nФайл input.txt пустой.\nДобавьте не пустой файл в директорию или переименуйте существующий *.txt файл")
-else:
-
-    for match in re.finditer(r'\b[0-9A-F]+\b', content, re.IGNORECASE):
-        print(proc(match))
+    for match in pattern.finditer(f.read()):
+        word_representation = hex_to_words(match.group())
+        if word_representation:
+            print(f"{match.group()}: {word_representation}")
