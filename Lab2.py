@@ -18,7 +18,6 @@ digit_to_word = {
     'E': 'четырнадцать'
 }
 
-
 def proc(match):
     lexeme = match.group()
     try:
@@ -32,12 +31,12 @@ def proc(match):
     else:
         return lexeme + " не удовлетворяет условию задачи"
 
-
 with open('input.txt', 'r') as f:
-    block = f.read(1024)
-    if not block:
-        print("\nФайл input.txt пустой.\nДобавьте не пустой файл в директорию или переименуйте существующий *.txt файл")
-    while block:
-        for match in re.finditer(r'\b[0-9A-F]+\b', block, re.IGNORECASE):
-            print(proc(match))
-        block = f.read(1024)
+    content = f.read()
+
+if not content:
+    print("\nФайл input.txt пустой.\nДобавьте не пустой файл в директорию или переименуйте существующий *.txt файл")
+else:
+
+    for match in re.finditer(r'\b[0-9A-F]+\b', content, re.IGNORECASE):
+        print(proc(match))
