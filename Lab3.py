@@ -44,7 +44,7 @@ def multiply_matrix_by_number(matrix, number):
 def multiply_matrices(matrix1, matrix2):
     return [[sum(a*b for a,b in zip(X_row,Y_col)) for Y_col in zip(*matrix2)] for X_row in matrix1]
 
-N = int(input("Введите размер матрицы N (кратный 4): "))
+N = int(input("Введите размер матрицы N: "))
 K = int(input("Введите число K: "))
 
 A = fill_matrix(N)
