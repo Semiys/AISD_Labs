@@ -6,67 +6,83 @@
 # где G-нижняя треугольная матрица, полученная из А. 
 # Выводятся по мере формирования А, F и все матричные операции последовательно.
 import numpy as np
-import matplotlib.pyplot as plt
+from matplotlib import pyplot as plt
 
-def create_submatrix(size):
-    return np.random.randint(-10, 11, size=(size, size))
 
-def create_matrix_F(A, B, C, D, E):
-    N = A.shape[0] // 2
-    F = A.copy()
-    count_zeros = np.sum(E[:, ::2] == 0)
-    product_of_numbers = np.prod(E[E != 0])
+n = int(input("Введите размер матрицы N : "))
+while n < 6:
+    n = int(input("Введите размер матрицы больше 5: "))
+k = int(input("Введите коэффициент K: "))
 
-    if count_zeros > product_of_numbers:
+# Создание матрицы A
+A = np.random.randint(-10, 11, size=(n, n))
+F = A.copy()
+print("Матрица A:\n", A, "\n")
 
-        F[:N, :N], F[N:, N:] = C, B
-    else:
 
-        F[:N, :N], F[N:, :N] = E, C
-
-    return F
-
-def plot_matrix(matrix, title):
-    plt.matshow(matrix)
+# Вспомогательная функция для вывода матрицы
+def print_mat(mat, description):
+    plt.matshow(mat)
+    plt.title(description)
     plt.colorbar()
-    plt.title(title)
     plt.show()
 
-def main():
-    K = int(input("Введите число K: "))
-    N = int(input("Введите размер N (четное число): "))
 
-    if N % 2 != 0:
-        raise ValueError("N должно быть четным числом.")
+# Функция для подсчета количества нулей в нечетных столбцах матрицы
+def count_zeros_in_odd_columns(mat):
+    return np.sum(mat[:, 1::2] == 0)
 
-    size = N // 2
-    B = create_submatrix(size)
-    C = create_submatrix(size)
-    D = create_submatrix(size)
-    E = create_submatrix(size)
 
-    A = np.block([[B, C], [D, E]])
-    print("Матрица A:")
-    print(A)
-    plot_matrix(A, "Матрица A")
+# Функция для подсчета произведения чисел в матрице
+def product_of_elements(mat):
+    return np.prod(mat[mat != 0])
 
-    F = create_matrix_F(A, B, C, D, E)
-    print("Матрица F:")
-    print(F)
-    plot_matrix(F, "Матрица F")
 
-    det_A = np.linalg.det(A)
-    trace_F = np.trace(F)
+# Функция для формирования матрицы F
+def form_matrix_F(A, B, C, D, E):
+    size = len(A) // 2
+    zeros = count_zeros_in_odd_columns(E)
+    product = product_of_elements(E)
 
-    if det_A > trace_F:
-        result = np.linalg.inv(A).dot(A.T) - K * np.linalg.inv(F)
+    # Определение, какие подматрицы менять местами
+    if zeros > product:
+
+        B, C = np.fliplr(C), np.fliplr(B)
     else:
-        G = np.tril(A)
-        result = (A + G - F.T) * K
 
-    print("Результат:")
-    print(result)
-    plot_matrix(result, "Результат")
+        C, E = E, C
 
-if __name__ == "__main__":
-    main()
+    # Формирование матрицы F из подматриц
+    F[:size, :size] = B
+    F[:size, size:] = C
+    F[size:, :size] = D
+    F[size:, size:] = E
+    return F
+
+
+# Деление матрицы A на подматрицы B, C, D, E
+size = n // 2
+B, C, D, E = A[:size, :size], A[:size, size:], A[size:, :size], A[size:, size:]
+
+
+print_mat(A, "Матрица A")
+print_mat(B, "Матрица B")
+print_mat(C, "Матрица C")
+print_mat(D, "Матрица D")
+print_mat(E, "Матрица E")
+
+# Формирование матрицы F
+F = form_matrix_F(A, B, C, D, E)
+print("Матрица F после перестановки:\n", F, "\n")
+print_mat(F, "Матрица F")
+
+# Вычисление результата в зависимости от условия
+if np.linalg.det(A) > np.trace(F):
+    result = np.linalg.inv(A).dot(A.T) - k * np.linalg.inv(F)
+else:
+    G = np.tril(A)
+    result = (A + G - F.T) * k
+
+# Вывод итоговой матрицы
+print("Результат:\n", result)
+print_mat(result, "Результат")
