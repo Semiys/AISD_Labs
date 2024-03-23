@@ -43,10 +43,15 @@ def count_zeros_in_odd_columns_of_left_triangle(matrix):
 def product_of_perimeter_of_upper_triangle(matrix):
     size = len(matrix)
     product = 1
-    for i in range(size):
-        for j in range(size - i):
-            if i == 0 or j == 0 or j == size - i - 1:
-                product *= matrix[i][j]
+   
+    for j in range(size - 1):
+        product *= matrix[0][j]
+  
+    for i in range(1, size - 1):
+        product *= matrix[i][size - 1]
+   
+    for i in range(1, size):
+        product *= matrix[i][size - i - 1]
     return product
 
 # Функция для формирования матрицы F
