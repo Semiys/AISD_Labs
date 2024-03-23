@@ -30,46 +30,48 @@ def multiply_matrices(A, B):
 def multiply_matrix_by_constant(K, matrix):
     return [[K * matrix[i][j] for j in range(len(matrix[0]))] for i in range(len(matrix))]
 
-# Функция для подсчета количества нулей в нечетных столбцах левого треугольника подматрицы E
-def count_zeros_in_odd_columns_of_left_triangle(matrix):
+# Функция для подсчета количества нулей в нечетных столбцах левого нижнего треугольника подматрицы E
+def count_zeros_in_odd_columns_of_lower_triangle(matrix):
     count = 0
-    for i in range(len(matrix)):
-        for j in range(i + 1):
-            if j % 2 == 0 and matrix[i][j] == 0:
+    size = len(matrix)
+    for i in range(size):
+        for j in range(size):
+            if j < size - i and j % 2 == 1 and matrix[i][j] == 0:
                 count += 1
     return count
 
-# Функция для вычисления произведения чисел по периметру верхнего треугольника подматрицы E
-def product_of_perimeter_of_upper_triangle(matrix):
+# Функция для вычисления произведения чисел по периметру верхнего правого треугольника подматрицы E
+def product_of_perimeter_of_upper_right_triangle(matrix):
     size = len(matrix)
     product = 1
-   
-    for j in range(size - 1):
+    
+    for j in range(size):
         product *= matrix[0][j]
-  
-    for i in range(1, size - 1):
-        product *= matrix[i][size - 1]
-   
+    
     for i in range(1, size):
-        product *= matrix[i][size - i - 1]
+        product *= matrix[i][size-1]
+    
+    for i in range(1, size):
+        product *= matrix[i][size-i-1]
     return product
+
 
 # Функция для формирования матрицы F
 def create_matrix_F(A, B, C, D, E):
-    F = [row[:] for row in A]  # Копирование матрицы A
-    zeros_in_E1 = count_zeros_in_odd_columns_of_left_triangle(E)
-    product_of_E2_perimeter = product_of_perimeter_of_upper_triangle(E)
+    F = [row[:] for row in A]  
+    zeros_in_E1 = count_zeros_in_odd_columns_of_lower_triangle(E)
+    product_of_E2_perimeter = product_of_perimeter_of_upper_right_triangle(E)
 
     if zeros_in_E1 > product_of_E2_perimeter:
-        
+        # Меняем местами элементы в области 1 и 3 в матрице F
         for i in range(N // 2):
             for j in range(i + 1):
-                F[i][j], F[N // 2 + i][N - j - 1] = F[N // 2 + i][N - j - 1], F[i][j]
+                F[i][j], F[N // 2 + i][N // 2 + j] = F[N // 2 + i][N // 2 + j], F[i][j]
     else:
-        
+        # Меняем местами подматрицы C и E несимметрично
         for i in range(N // 2):
             for j in range(N // 2):
-                F[i][j + N // 2], F[i + N // 2][j] = E[i][j], C[i][j]
+                F[i][N // 2 + j], F[N // 2 + i][j] = E[i][j], C[i][j]
 
     return F
 
@@ -82,27 +84,27 @@ def print_matrix(matrix):
 
 
 K = int(input("Введите число K: "))
-N = int(input("Введите размерность N: "))
+N = int(input("Введите размер матрицы N: "))
 
 
-
+# Создание и вывод матрицы А
 A = create_test_matrix(N)
 print("Матрица A:")
 print_matrix(A)
 
-
+# Разделение матрицы A на подматрицы B, C, D, E
 half = N // 2
 B = [row[:half] for row in A[:half]]
 C = [row[half:] for row in A[:half]]
 D = [row[:half] for row in A[half:]]
 E = [row[half:] for row in A[half:]]
 
-
+# Формирование и вывод матрицы F
 F = create_matrix_F(A, B, C, D, E)
 print("Матрица F:")
 print_matrix(F)
 
-
+# Вычисление выражения и вывод результата
 A_T = transpose(A)
 F_T = transpose(F)
 F_plus_A = add_matrices(F, A)
