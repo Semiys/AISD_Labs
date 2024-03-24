@@ -13,14 +13,34 @@ F = A.copy()
 print("Матрица A:\n", A, "\n")
 
 
-# Вспомогательная функция для вывода матрицы
+# Вспомогательные функции для вывода матрицы
 def print_mat(mat, description):
     plt.matshow(mat, cmap='inferno')
     plt.title(description)
     plt.colorbar()
     plt.show()
+def print_mat1(mat, description):
+    plt.figure(figsize=(10, 4))
+    plt.plot(mat[0, :], 'o-', color='purple')
+    plt.title(description)
+    plt.xlabel('Индекс столбца')
+    plt.ylabel('Значение элемента')
+    plt.grid(True)
+    plt.show()
+def print_mat2(F, description):
 
-
+    column_sums = np.sum(F, axis=0)
+    plt.bar(range(len(column_sums)), column_sums)
+    plt.title('Столбчатая диаграмма сумм значений столбцов матрицы F')
+    plt.xlabel('Индекс столбца')
+    plt.ylabel('Сумма значений')
+    plt.show()
+def print_mat3(F, description):
+    column_sums = np.sum(np.abs(F), axis=0)
+    labels = [f'Столбец {i + 1}' for i in range(F.shape[1])]
+    plt.pie(column_sums, labels=labels, autopct='%1.1f%%', startangle=140)
+    plt.title(description)
+    plt.show()
 # Функция для подсчета количества нулей в нечетных столбцах матрицы
 def count_zeros_in_odd_columns(mat):
     return np.sum(mat[:, 1::2] == 0)
@@ -68,6 +88,9 @@ print_mat(E, "Матрица E")
 F = form_matrix_F(A, B, C, D, E)
 print("Матрица F после перестановки:\n", F, "\n")
 print_mat(F, "Матрица F")
+print_mat1(F, "Матрица F")
+print_mat2(F, "Матрица F")
+print_mat3(F, "Матрица F")
 
 # Вычисление результата в зависимости от условия
 if np.linalg.det(A) > np.trace(F):
