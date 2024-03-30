@@ -4,7 +4,7 @@ from matplotlib import pyplot as plt
 
 n = int(input("Введите размер матрицы N : "))
 while n < 6:
-    n = int(input("Введите размер матрицы больше 5: "))
+    n = int(input("Введите размер: "))
 k = int(input("Введите коэффициент K: "))
 
 # Создание матрицы A
