@@ -3,7 +3,6 @@ from tkinter import scrolledtext, ttk
 import itertools
 import timeit
 
-# Функции из вашей лабораторной работы
 
 def generate_menus_alg(fruits, N):
     if N == 0:
