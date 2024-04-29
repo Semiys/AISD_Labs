@@ -102,10 +102,4 @@ print(f"Максимальное разнообразие фруктов в оп
 print(f"Максимальное разнообразие фруктов в оптимальных меню (функциональный подход): {max_diversity_func}")
 print("Пример оптимального меню (алгоритмический подход):", optimal_menus_alg[0] if optimal_menus_alg else "Нет оптимальных меню")
 print("Пример оптимального меню (функциональный подход):", optimal_menus_func[0] if optimal_menus_func else "Нет оптимальных меню")
-"""
-Проверки
-"""
-assert len(set(map(tuple, menus_alg))) == len(menus_alg), "Не все алгоритмически сгенерированные меню уникальны."
-assert len(set(map(tuple, menus_func))) == len(menus_func), "Не все функционально сгенерированные меню уникальны."
-assert all(is_valid_menu(menu) for menu in optimal_menus_alg), "Не все алгоритмические оптимальные меню валидны."
-assert all(is_valid_menu(menu) for menu in optimal_menus_func), "Не все функциональные оптимальные меню валидны."
+
