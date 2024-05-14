@@ -11,18 +11,19 @@
 """
 import itertools
 import timeit
+import random
 
 """
 Определяем функцию для генерации всех возможных меню (алгоритмический подход)
 """
 def generate_menus_alg(fruits, N):
     if N == 0:
-        return [[]]
-    all_combinations = []
-    for m in fruits:
-        for rest_of_menu in generate_menus_alg(fruits, N - 1):
-            all_combinations.append([m] + rest_of_menu)
-    return all_combinations
+        yield []
+    else:
+        for m in fruits:
+            for rest_of_menu in generate_menus_alg(fruits, N - 1):
+                if not rest_of_menu or m != rest_of_menu[-1]:
+                    yield [m] + rest_of_menu
 
 """
 Определяем функцию для генерации всех возможных меню (функциональный подход с использованием itertools)
@@ -46,12 +47,25 @@ def diversity_score(menu):
 Функция для генерации меню с учетом ограничений и оптимизации
 """
 def generate_menus_with_constraints(fruits, N, generator_function):
-    all_combinations = generator_function(fruits, N)
-    valid_menus = list(filter(is_valid_menu, all_combinations))
-    max_diversity = max(map(diversity_score, valid_menus), default=0)
-    optimal_menus = [menu for menu in valid_menus if diversity_score(menu) == max_diversity]
-    return optimal_menus
+    max_diversity = 0
+    optimal_menus = []
 
+    for menu in generator_function(fruits, N):
+        if is_valid_menu(menu):
+            diversity = diversity_score(menu)
+            if diversity > max_diversity:
+                max_diversity = diversity
+                optimal_menus = [menu]
+            elif diversity == max_diversity:
+                optimal_menus.append(menu)
+
+    return optimal_menus
+def print_menus(title, menus):
+    print(f"{title}:")
+    sample_menus = random.sample(menus, min(5, len(menus)))
+    for menu in sample_menus:
+        print(', '.join(menu))
+    print(f"Всего меню: {len(menus)}\n")
 """
 Запрашиваем у пользователя количество разных фруктов
 """
@@ -81,10 +95,16 @@ func_time_with_constraints = timeit.timeit(
 )
 
 
-menus_alg = generate_menus_alg(fruits, N)
+menus_alg = list(generate_menus_alg(fruits, N))
 menus_func = generate_menus_func(fruits, N)
+print_menus("Меню (алгоритмический подход)", menus_alg)
+print_menus("Меню (функциональный подход)", menus_func)
+
+
 optimal_menus_alg = generate_menus_with_constraints(fruits, N, generate_menus_alg)
 optimal_menus_func = generate_menus_with_constraints(fruits, N, generate_menus_func)
+print_menus("Оптимальные меню (алгоритмический подход)", optimal_menus_alg)
+print_menus("Оптимальные меню (функциональный подход)", optimal_menus_func)
 """
 Вывод результатов
 """
@@ -102,4 +122,3 @@ print(f"Максимальное разнообразие фруктов в оп
 print(f"Максимальное разнообразие фруктов в оптимальных меню (функциональный подход): {max_diversity_func}")
 print("Пример оптимального меню (алгоритмический подход):", optimal_menus_alg[0] if optimal_menus_alg else "Нет оптимальных меню")
 print("Пример оптимального меню (функциональный подход):", optimal_menus_func[0] if optimal_menus_func else "Нет оптимальных меню")
-
