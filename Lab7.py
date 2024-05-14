@@ -14,17 +14,19 @@ import tkinter as tk
 from tkinter import scrolledtext, ttk
 import itertools
 import timeit
+import random
 """
 Определяем функцию для генерации всех возможных меню (алгоритмический подход)
 """
 def generate_menus_alg(fruits, N):
     if N == 0:
-        return [[]]
-    all_combinations = []
-    for m in fruits:
-        for rest_of_menu in generate_menus_alg(fruits, N - 1):
-            all_combinations.append([m] + rest_of_menu)
-    return all_combinations
+        yield []
+    else:
+        for m in fruits:
+            for rest_of_menu in generate_menus_alg(fruits, N - 1):
+                if not rest_of_menu or m != rest_of_menu[-1]:
+                    yield [m] + rest_of_menu
+
 
 def generate_menus_func(fruits, N):
     return list(itertools.product(fruits, repeat=N))
@@ -36,10 +38,18 @@ def diversity_score(menu):
     return len(set(menu))
 
 def generate_menus_with_constraints(fruits, N, generator_function):
-    all_combinations = generator_function(fruits, N)
-    valid_menus = list(filter(is_valid_menu, all_combinations))
-    max_diversity = max(map(diversity_score, valid_menus), default=0)
-    optimal_menus = [menu for menu in valid_menus if diversity_score(menu) == max_diversity]
+    max_diversity = 0
+    optimal_menus = []
+
+    for menu in generator_function(fruits, N):
+        if is_valid_menu(menu):
+            diversity = diversity_score(menu)
+            if diversity > max_diversity:
+                max_diversity = diversity
+                optimal_menus = [menu]
+            elif diversity == max_diversity:
+                optimal_menus.append(menu)
+
     return optimal_menus
 """
 Функция вызываемая при нажатии кнопки
@@ -61,9 +71,10 @@ def generate_and_display_menus():
     """
     Выбор метода генерации
     """
+
     if selected_method == 'Алгоритмический':
         start_time = timeit.default_timer()
-        menus = generate_menus_alg(fruits, N)
+        menus = list(generate_menus_alg(fruits, N))
         time_taken = timeit.default_timer() - start_time
         optimal_menus = generate_menus_with_constraints(fruits, N, generate_menus_alg)
         text_area.insert(tk.INSERT, f"Метод: {selected_method}\n")
@@ -78,8 +89,8 @@ def generate_and_display_menus():
         text_area.insert(tk.INSERT, f"Сгенерировано {len(menus)} меню.\n")
     elif selected_method == 'Алгоритмический с ограничениями':
         start_time = timeit.default_timer()
-        menus = generate_menus_alg(fruits, N)
-        optimal_menus = generate_menus_with_constraints(fruits, N, generate_menus_alg)
+        menus = list(generate_menus_alg(fruits, N))
+        optimal_menus = generate_menus_with_constraints(fruits, N, lambda x, y: menus)
         time_taken = timeit.default_timer() - start_time
         text_area.insert(tk.INSERT, f"Метод: {selected_method}\n")
         text_area.insert(tk.INSERT, f"Сгенерировано {len(optimal_menus)} оптимальных меню с ограничениями.\n")
@@ -96,10 +107,13 @@ def generate_and_display_menus():
     max_diversity = max(map(diversity_score, optimal_menus), default=0)
     text_area.insert(tk.INSERT, f"Максимальное разнообразие фруктов в оптимальных меню: {max_diversity}\n")
     if optimal_menus:
-        example_menu = format_menus_for_display([optimal_menus[0]])
-        text_area.insert(tk.INSERT, f"Пример оптимального меню: {example_menu}\n")
+        sample_size = min(5, len(optimal_menus))
+        random_optimal_menus = random.sample(optimal_menus, sample_size)
+        example_menus = format_menus_for_display(random_optimal_menus)
+        text_area.insert(tk.INSERT, f"Примеры меню:\n{example_menus}\n")
     else:
-        text_area.insert(tk.INSERT, "Нет оптимальных меню\n")
+        text_area.insert(tk.INSERT, "Нет меню\n")
+
     text_area.insert(tk.INSERT, f"Время выполнения: {time_taken:.6f} секунд\n\n")
 
 
