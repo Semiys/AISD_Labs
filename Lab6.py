@@ -103,6 +103,8 @@ print_menus("Меню (функциональный подход)", menus_func)
 
 optimal_menus_alg = generate_menus_with_constraints(fruits, N, generate_menus_alg)
 optimal_menus_func = generate_menus_with_constraints(fruits, N, generate_menus_func)
+print_menus("Оптимальные меню (алгоритмический подход)", optimal_menus_alg)
+print_menus("Оптимальные меню (функциональный подход)", optimal_menus_func)
 
 """
 Вывод результатов
@@ -119,5 +121,4 @@ max_diversity_alg = max(map(diversity_score, optimal_menus_alg), default=0)
 max_diversity_func = max(map(diversity_score, optimal_menus_func), default=0)
 print(f"Максимальное разнообразие фруктов в оптимальных меню (алгоритмический подход): {max_diversity_alg}")
 print(f"Максимальное разнообразие фруктов в оптимальных меню (функциональный подход): {max_diversity_func}")
-print("Пример оптимального меню (алгоритмический подход):", optimal_menus_alg[0] if optimal_menus_alg else "Нет оптимальных меню")
-print("Пример оптимального меню (функциональный подход):", optimal_menus_func[0] if optimal_menus_func else "Нет оптимальных меню")
+
