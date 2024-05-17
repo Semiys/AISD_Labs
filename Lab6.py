@@ -103,8 +103,7 @@ print_menus("Меню (функциональный подход)", menus_func)
 
 optimal_menus_alg = generate_menus_with_constraints(fruits, N, generate_menus_alg)
 optimal_menus_func = generate_menus_with_constraints(fruits, N, generate_menus_func)
-print_menus("Оптимальные меню (алгоритмический подход)", optimal_menus_alg)
-print_menus("Оптимальные меню (функциональный подход)", optimal_menus_func)
+
 """
 Вывод результатов
 """
