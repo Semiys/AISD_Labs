@@ -24,8 +24,8 @@ def generate_menus_alg(fruits, N):
     else:
         for m in fruits:
             for rest_of_menu in generate_menus_alg(fruits, N - 1):
-                if not rest_of_menu or m != rest_of_menu[-1]:
-                    yield [m] + rest_of_menu
+                yield [m] + rest_of_menu
+
 
 
 def generate_menus_func(fruits, N):
@@ -58,8 +58,11 @@ def generate_and_display_menus():
     global menus
     try:
         K = int(entry_k.get())
-    except ValueError:
-        text_area.insert(tk.INSERT, "Пожалуйста, введите целое число для K.\n")
+        if K <=0:
+            raise ValueError("Число должно быть больше нуля.")
+
+    except ValueError as e:
+        text_area.insert(tk.INSERT, f"Некорректный ввод: {e}. Пожалуйста, попробуйте снова.\n")
         return
     N = 7
     fruits = [f'ф{i+1}' for i in range(K)]
@@ -76,17 +79,30 @@ def generate_and_display_menus():
         start_time = timeit.default_timer()
         menus = list(generate_menus_alg(fruits, N))
         time_taken = timeit.default_timer() - start_time
-        optimal_menus = generate_menus_with_constraints(fruits, N, generate_menus_alg)
         text_area.insert(tk.INSERT, f"Метод: {selected_method}\n")
         text_area.insert(tk.INSERT, f"Сгенерировано {len(menus)} меню.\n")
+        if menus:
+            sample_size = min(5, len(menus))
+            random_menus = random.sample(menus, sample_size)
+            example_menus = format_menus_for_display(random_menus)
+            text_area.insert(tk.INSERT, f"Примеры меню:\n{example_menus}\n")
+        else:
+            text_area.insert(tk.INSERT, "Нет меню\n")
+
 
     elif selected_method == 'Функциональный':
         start_time = timeit.default_timer()
         menus = generate_menus_func(fruits, N)
         time_taken = timeit.default_timer() - start_time
-        optimal_menus = generate_menus_with_constraints(fruits, N, generate_menus_func)
         text_area.insert(tk.INSERT, f"Метод: {selected_method}\n")
         text_area.insert(tk.INSERT, f"Сгенерировано {len(menus)} меню.\n")
+        if menus:
+            sample_size = min(5, len(menus))
+            random_menus = random.sample(menus, sample_size)
+            example_menus = format_menus_for_display(random_menus)
+            text_area.insert(tk.INSERT, f"Примеры меню:\n{example_menus}\n")
+        else:
+            text_area.insert(tk.INSERT, "Нет меню\n")
     elif selected_method == 'Алгоритмический с ограничениями':
         start_time = timeit.default_timer()
         menus = list(generate_menus_alg(fruits, N))
@@ -94,6 +110,15 @@ def generate_and_display_menus():
         time_taken = timeit.default_timer() - start_time
         text_area.insert(tk.INSERT, f"Метод: {selected_method}\n")
         text_area.insert(tk.INSERT, f"Сгенерировано {len(optimal_menus)} оптимальных меню с ограничениями.\n")
+        if optimal_menus:
+            sample_size = min(5, len(optimal_menus))
+            random_optimal_menus = random.sample(optimal_menus, sample_size)
+            example_menus = format_menus_for_display(random_optimal_menus)
+            text_area.insert(tk.INSERT, f"Примеры меню:\n{example_menus}\n")
+        else:
+            text_area.insert(tk.INSERT, "Нет меню\n")
+        max_diversity = max(map(diversity_score, optimal_menus), default=0)
+        text_area.insert(tk.INSERT, f"Максимальное разнообразие фруктов в оптимальных меню: {max_diversity}\n")
     elif selected_method == 'Функциональный с ограничениями':
         start_time = timeit.default_timer()
         menus = generate_menus_func(fruits, N)
@@ -101,29 +126,23 @@ def generate_and_display_menus():
         time_taken = timeit.default_timer() - start_time
         text_area.insert(tk.INSERT, f"Метод: {selected_method}\n")
         text_area.insert(tk.INSERT, f"Сгенерировано {len(optimal_menus)} оптимальных меню с ограничениями.\n")
+        if optimal_menus:
+            sample_size = min(5, len(optimal_menus))
+            random_optimal_menus = random.sample(optimal_menus, sample_size)
+            example_menus = format_menus_for_display(random_optimal_menus)
+            text_area.insert(tk.INSERT, f"Примеры меню:\n{example_menus}\n")
+        else:
+            text_area.insert(tk.INSERT, "Нет меню\n")
+        max_diversity = max(map(diversity_score, optimal_menus), default=0)
+        text_area.insert(tk.INSERT, f"Максимальное разнообразие фруктов в оптимальных меню: {max_diversity}\n")
     else:
         text_area.insert(tk.INSERT, "Неподдерживаемый метод генерации.\n")
         return
-    max_diversity = max(map(diversity_score, optimal_menus), default=0)
-    text_area.insert(tk.INSERT, f"Максимальное разнообразие фруктов в оптимальных меню: {max_diversity}\n")
-    if optimal_menus:
-        sample_size = min(5, len(optimal_menus))
-        random_optimal_menus = random.sample(optimal_menus, sample_size)
-        example_menus = format_menus_for_display(random_optimal_menus)
-        text_area.insert(tk.INSERT, f"Примеры меню:\n{example_menus}\n")
-    else:
-        text_area.insert(tk.INSERT, "Нет меню\n")
 
     text_area.insert(tk.INSERT, f"Время выполнения: {time_taken:.6f} секунд\n\n")
 
-
-
-
-
 def format_menus_for_display(menus):
     return '\n'.join(', '.join(menu) for menu in menus)
-
-
 
 """
 Создание основного окна
