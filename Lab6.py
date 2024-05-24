@@ -22,8 +22,7 @@ def generate_menus_alg(fruits, N):
     else:
         for m in fruits:
             for rest_of_menu in generate_menus_alg(fruits, N - 1):
-                if not rest_of_menu or m != rest_of_menu[-1]:
-                    yield [m] + rest_of_menu
+                yield [m] + rest_of_menu
 
 """
 Определяем функцию для генерации всех возможных меню (функциональный подход с использованием itertools)
@@ -66,10 +65,19 @@ def print_menus(title, menus):
     for menu in sample_menus:
         print(', '.join(menu))
     print(f"Всего меню: {len(menus)}\n")
+def get_valid_number(valnumb):
+    while True:
+        try:
+            value = int(input(valnumb))
+            if value <= 0:
+                raise ValueError("Число должно быть больше нуля.")
+            return value
+        except ValueError as e:
+            print(f"Некорректный ввод: {e}. Пожалуйста, попробуйте снова.")
 """
 Запрашиваем у пользователя количество разных фруктов
 """
-K = int(input("Введите общее количество различных фруктов (K): "))
+K = get_valid_number("Введите общее количество различных фруктов (K): ")
 """
 Устанавливаем количество фруктов в меню, равное 7 (на неделю)
 """
@@ -105,7 +113,6 @@ optimal_menus_alg = generate_menus_with_constraints(fruits, N, generate_menus_al
 optimal_menus_func = generate_menus_with_constraints(fruits, N, generate_menus_func)
 print_menus("Оптимальные меню (алгоритмический подход)", optimal_menus_alg)
 print_menus("Оптимальные меню (функциональный подход)", optimal_menus_func)
-
 """
 Вывод результатов
 """
@@ -121,4 +128,3 @@ max_diversity_alg = max(map(diversity_score, optimal_menus_alg), default=0)
 max_diversity_func = max(map(diversity_score, optimal_menus_func), default=0)
 print(f"Максимальное разнообразие фруктов в оптимальных меню (алгоритмический подход): {max_diversity_alg}")
 print(f"Максимальное разнообразие фруктов в оптимальных меню (функциональный подход): {max_diversity_func}")
-
