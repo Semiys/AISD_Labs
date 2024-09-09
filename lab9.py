@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import messagebox
-import random
+
 
 class TicTacToe:
     def __init__(self):
@@ -19,6 +19,16 @@ class TicTacToe:
         tk.Button(mode_frame, text='Игрок против Игрока', command=self.player_vs_player).pack(side=tk.LEFT)
         tk.Button(mode_frame, text='Игрок против Компьютера', command=self.player_vs_ai).pack(side=tk.RIGHT)
         self.initialize_board()
+        """Новый фрейм для выбора, кто сделает первый ход"""
+        self.first_move_frame = tk.Frame(self.window)
+        self.first_move_frame.grid(row=1, column=0, columnspan=3)
+        tk.Label(self.first_move_frame, text="Кто ходит первым:").pack(side=tk.LEFT)
+        tk.Button(self.first_move_frame, text='Игрок (X)', command=lambda: self.set_first_move('X')).pack(side=tk.LEFT)
+        tk.Button(self.first_move_frame, text='Компьютер/Игрок 2 (O)', command=lambda: self.set_first_move('O')).pack(
+            side=tk.LEFT)
+
+        """ Скрыть фрейм до выбора режима игры """
+        self.first_move_frame.grid_remove()
 
     def initialize_board(self):
         for i in range(3):
@@ -29,12 +39,24 @@ class TicTacToe:
         reset_button = tk.Button(self.window, text='Рестарт', font=('normal', 20), command=self.reset_game)
         reset_button.grid(row=4, column=0, columnspan=3)
 
+    """ Метод для установки первого хода """
+    def set_first_move(self, player):
+        self.current_player = player
+        self.first_move_frame.grid_remove()
+        if self.play_with_ai and self.current_player == "O":
+            self.ai_move()
+            """ Если играем с AI и AI ходит первым """
+
     def player_vs_player(self):
         self.play_with_ai = False
+        self.first_move_frame.grid()
+        """ Показать настройки первого хода """
         self.reset_game()
 
     def player_vs_ai(self):
         self.play_with_ai = True
+        self.first_move_frame.grid()
+        """ Показать настройки первого хода """
         self.reset_game()
 
     def on_click(self, row, col):
@@ -123,7 +145,7 @@ class TicTacToe:
     def start_game(self):
         self.window.mainloop()
 
-# Запуск игры
+""" Запуск игры """
 if __name__ == "__main__":
     game = TicTacToe()
     game.start_game()
