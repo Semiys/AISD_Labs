@@ -2,15 +2,9 @@ import os
 import shutil
 import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
-from PIL import Image
-import requests
 import mimetypes
-import io
-from transformers import pipeline, AutoFeatureExtractor, AutoModelForImageClassification, ConvNextImageProcessor
-import torch
 import threading
 import logging
-import time
 import json
 import sys
 import warnings
@@ -22,25 +16,7 @@ warnings.filterwarnings("ignore", category=DeprecationWarning)
 logging.basicConfig(filename='file_sorter.log', level=logging.INFO,
                     format='%(asctime)s - %(levelname)s - %(message)s')
 
-try:
-    image_model_name = "microsoft/resnet-50"
-    image_feature_extractor = ConvNextImageProcessor.from_pretrained(image_model_name)
-    image_model = AutoModelForImageClassification.from_pretrained(image_model_name)
-    image_classifier = pipeline("image-classification", model=image_model, feature_extractor=image_feature_extractor)
-
-    text_classifier = pipeline("text-classification", model="distilbert-base-uncased-finetuned-sst-2-english",
-                               max_length=512, truncation=True)
-
-    audio_classifier = pipeline("audio-classification", model="facebook/wav2vec2-base-960h")
-
-    video_classifier = pipeline("video-classification", model="facebook/timesformer-base-finetuned-k400")
-except Exception as e:
-    logging.error(f"Ошибка при инициализации моделей: {str(e)}")
-    messagebox.showerror("Ошибка", "Не удалось инициализировать модели машинного обучения.")
-    sys.exit(1)
-
 os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
-
 def get_file_type(file_path):
     try:
         mime_type, _ = mimetypes.guess_type(file_path)
@@ -88,52 +64,7 @@ def get_file_type(file_path):
         logging.error(f"Ошибка при определении типа файла {file_path}: {str(e)}")
         return 'unknown'
 
-def load_audio(file_path, max_duration=None):
-    import librosa
-    audio, sr = librosa.load(file_path, sr=16000, duration=max_duration)
-    return audio
-
-def load_video(file_path, max_duration=None):
-    import cv2
-    cap = cv2.VideoCapture(file_path)
-    frames = []
-    start_time = time.time()
-    while True:
-        ret, frame = cap.read()
-        if not ret or (max_duration and time.time() - start_time > max_duration):
-            break
-        frames.append(frame)
-    cap.release()
-    return frames
-
-def analyze_file_content(file_path):
-    file_type = get_file_type(file_path)
-    try:
-        if file_type == 'image':
-            with Image.open(file_path) as img:
-                img = img.convert('RGB')
-                results = image_classifier(img)
-                return results[0]['label']
-        elif file_type == 'text' or file_type == 'code':
-            with open(file_path, 'r', encoding='utf-8') as file:
-                content = file.read()
-                results = text_classifier(content)
-                return results[0]['label']
-        elif file_type == 'audio':
-            audio = load_audio(file_path, max_duration=10)
-            results = audio_classifier(audio)
-            return results[0]['label']
-        elif file_type == 'video':
-            frames = load_video(file_path, max_duration=10)
-            results = video_classifier(frames)
-            return results[0]['label']
-        else:
-            return 'unknown'
-    except Exception as e:
-        logging.error(f"Ошибка при анализе содержимого файла {file_path}: {str(e)}")
-        return 'unknown'
-
-def sort_files(source_folder, destination_folder, sort_modes):
+def sort_files(source_folder, destination_folder):
     try:
         total_files = len([f for f in os.listdir(source_folder) if os.path.isfile(os.path.join(source_folder, f))])
         processed_files = 0
@@ -143,21 +74,7 @@ def sort_files(source_folder, destination_folder, sort_modes):
             file_path = os.path.join(source_folder, filename)
             if os.path.isfile(file_path):
                 file_type = get_file_type(file_path)
-
-                if "content" in sort_modes:
-                    category = analyze_file_content(file_path)
-                    if category in ['LABEL_0', 'LABEL_1']:
-                        category = 'positive' if category == 'LABEL_1' else 'negative'
-                    elif category in image_model.config.id2label.values():
-                        category = f"image_{category.lower().replace(' ', '_')}"
-                    elif category in ['Speech', 'Music', 'Noise']:
-                        category = f"audio_{category.lower()}"
-                    elif category in ['Action', 'Drama', 'Comedy', 'Documentary']:
-                        category = f"video_{category.lower()}"
-                    else:
-                        category = 'other'
-                else:
-                    category = file_type
+                category = file_type
 
                 category_folder = os.path.join(destination_folder, category)
                 os.makedirs(category_folder, exist_ok=True)
@@ -210,21 +127,20 @@ def choose_destination_folder():
 def start_sorting_thread():
     source = source_entry.get()
     destination = destination_entry.get()
-    sort_modes = [mode for mode, var in sort_mode_vars.items() if var.get()]
-    if source and destination and sort_modes:
+    if source and destination:
         start_button.config(state=tk.DISABLED)
         progress_var.set(0)
         log_text.config(state=tk.NORMAL)
         log_text.delete(1.0, tk.END)
         log_text.config(state=tk.DISABLED)
-        threading.Thread(target=sort_files_wrapper, args=(source, destination, sort_modes), daemon=True).start()
+        threading.Thread(target=sort_files_wrapper, args=(source, destination), daemon=True).start()
     else:
         messagebox.showwarning("Предупреждение",
-                               "Пожалуйста, выберите исходную папку, папку назначения и хотя бы один режим сортировки.")
+                               "Пожалуйста, выберите исходную папку и папку назначения.")
 
-def sort_files_wrapper(source, destination, sort_modes):
+def sort_files_wrapper(source, destination):
     try:
-        sort_files(source, destination, sort_modes)
+        sort_files(source, destination)
     finally:
         start_button.config(state=tk.NORMAL)
 
@@ -243,27 +159,19 @@ destination_entry = ttk.Entry(frame, width=50)
 destination_entry.grid(column=0, row=3, sticky=(tk.W, tk.E), pady=5)
 ttk.Button(frame, text="Выбрать", command=choose_destination_folder).grid(column=1, row=3, sticky=tk.W, padx=5)
 
-ttk.Label(frame, text="Режимы сортировки:").grid(column=0, row=4, sticky=tk.W, pady=5)
-sort_mode_vars = {
-    "type": tk.BooleanVar(value=True),
-    "content": tk.BooleanVar(value=False)
-}
-ttk.Checkbutton(frame, text="По типу файла", variable=sort_mode_vars["type"]).grid(column=0, row=5, sticky=tk.W)
-ttk.Checkbutton(frame, text="По содержимому", variable=sort_mode_vars["content"]).grid(column=0, row=6, sticky=tk.W)
-
 start_button = ttk.Button(frame, text="Начать сортировку", command=start_sorting_thread)
-start_button.grid(column=0, row=7, columnspan=2, pady=20)
+start_button.grid(column=0, row=4, columnspan=2, pady=20)
 
 progress_var = tk.DoubleVar()
 progress_bar = ttk.Progressbar(frame, variable=progress_var, maximum=100)
-progress_bar.grid(column=0, row=8, columnspan=2, sticky=(tk.W, tk.E), pady=10)
+progress_bar.grid(column=0, row=5, columnspan=2, sticky=(tk.W, tk.E), pady=10)
 
 log_text = tk.Text(frame, height=15, width=70, wrap=tk.WORD)
-log_text.grid(column=0, row=9, columnspan=2, sticky=(tk.W, tk.E), pady=10)
+log_text.grid(column=0, row=6, columnspan=2, sticky=(tk.W, tk.E), pady=10)
 log_text.config(state=tk.DISABLED)
 
 scrollbar = ttk.Scrollbar(frame, orient="vertical", command=log_text.yview)
-scrollbar.grid(column=2, row=9, sticky=(tk.N, tk.S))
+scrollbar.grid(column=2, row=6, sticky=(tk.N, tk.S))
 log_text.configure(yscrollcommand=scrollbar.set)
 
 def update_log(message):
@@ -298,7 +206,7 @@ def on_closing():
         root.destroy()
 
 button_frame = ttk.Frame(frame)
-button_frame.grid(column=0, row=10, columnspan=2, pady=10)
+button_frame.grid(column=0, row=7, columnspan=2, pady=10)
 
 clear_button = ttk.Button(button_frame, text="Очистить логи", command=clear_logs)
 clear_button.grid(column=0, row=0, padx=5)
@@ -329,8 +237,7 @@ help_menu.add_command(label="О программе", command=lambda: messagebox.
 def save_settings():
     settings = {
         "source_folder": source_entry.get(),
-        "destination_folder": destination_entry.get(),
-        "sort_modes": {mode: var.get() for mode, var in sort_mode_vars.items()}
+        "destination_folder": destination_entry.get()
     }
     with open("settings.json", "w") as f:
         json.dump(settings, f)
@@ -341,9 +248,6 @@ def load_settings():
             settings = json.load(f)
         source_entry.insert(0, settings.get("source_folder", ""))
         destination_entry.insert(0, settings.get("destination_folder", ""))
-        for mode, value in settings.get("sort_modes", {}).items():
-            if mode in sort_mode_vars:
-                sort_mode_vars[mode].set(value)
     except FileNotFoundError:
         pass
 
